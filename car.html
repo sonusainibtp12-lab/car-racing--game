@@ -1,0 +1,763 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Highway Racer</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    user-select:none;
+}
+
+body{
+    margin:0;
+    background:#071018;
+    font-family:Arial,sans-serif;
+    overflow:hidden;
+    color:white;
+}
+
+#game{
+    width:420px;
+    height:700px;
+    max-width:100vw;
+    max-height:100vh;
+    margin:auto;
+    position:relative;
+    overflow:hidden;
+    background:#222;
+    border-left:5px solid #555;
+    border-right:5px solid #555;
+}
+
+/* SKY */
+#sky{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:
+      linear-gradient(#1598e8 0%,#72d5ff 35%,#74b85c 35%,#276b28 100%);
+}
+
+/* ROAD */
+#road{
+    position:absolute;
+    top:0;
+    left:55px;
+    width:310px;
+    height:100%;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        #333 0px,
+        #333 70px,
+        #383838 70px,
+        #383838 140px
+      );
+    border-left:7px solid white;
+    border-right:7px solid white;
+    box-shadow:0 0 25px #000 inset;
+}
+
+/* ROAD LINES */
+.line{
+    position:absolute;
+    width:8px;
+    height:70px;
+    background:white;
+    left:50%;
+    transform:translateX(-50%);
+    opacity:.9;
+}
+
+/* HUD */
+#hud{
+    position:absolute;
+    top:10px;
+    left:10px;
+    right:10px;
+    z-index:50;
+    display:flex;
+    justify-content:space-between;
+    gap:5px;
+}
+
+.box{
+    background:rgba(0,0,0,.65);
+    border:2px solid rgba(255,255,255,.25);
+    border-radius:10px;
+    padding:7px 10px;
+    font-size:14px;
+    box-shadow:0 0 10px #000;
+}
+
+/* PLAYER CAR */
+.car{
+    position:absolute;
+    width:58px;
+    height:105px;
+    border-radius:14px 14px 9px 9px;
+    background:linear-gradient(90deg,#b40000,#ff2525,#b40000);
+    border:3px solid #ffaaaa;
+    box-shadow:
+      0 0 12px #ff0000,
+      0 8px 15px rgba(0,0,0,.8);
+    z-index:20;
+}
+
+.car:before{
+    content:"";
+    position:absolute;
+    width:40px;
+    height:35px;
+    left:6px;
+    top:12px;
+    border-radius:9px;
+    background:linear-gradient(#bcecff,#297da5);
+    border:2px solid #9ee8ff;
+}
+
+.car:after{
+    content:"";
+    position:absolute;
+    width:44px;
+    height:22px;
+    left:4px;
+    bottom:10px;
+    border-radius:50%;
+    background:rgba(255,255,255,.13);
+}
+
+/* WHEELS */
+.wheel{
+    position:absolute;
+    width:8px;
+    height:25px;
+    background:#050505;
+    border-radius:5px;
+    top:20px;
+}
+.w1{left:-7px}
+.w2{right:-7px}
+.w3{left:-7px;bottom:20px;top:auto}
+.w4{right:-7px;bottom:20px;top:auto}
+
+/* ENEMY */
+.enemy{
+    position:absolute;
+    width:55px;
+    height:100px;
+    border-radius:13px;
+    border:3px solid #ddd;
+    z-index:15;
+    box-shadow:0 0 12px rgba(255,255,255,.3);
+}
+
+.enemy:before{
+    content:"";
+    position:absolute;
+    left:7px;
+    top:12px;
+    width:35px;
+    height:31px;
+    background:#8ed8f5;
+    border-radius:8px;
+    border:2px solid white;
+}
+
+/* COIN */
+.coin{
+    position:absolute;
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    background:radial-gradient(circle,#fff58a 0%,#ffd000 35%,#e58b00 75%);
+    border:3px solid #fff1a0;
+    box-shadow:0 0 18px #ffd000;
+    z-index:18;
+    animation:spin .7s linear infinite;
+}
+
+.coin:after{
+    content:"$";
+    position:absolute;
+    color:#9a5d00;
+    font-weight:bold;
+    font-size:20px;
+    left:8px;
+    top:2px;
+}
+
+@keyframes spin{
+    50%{transform:rotateY(180deg) scale(.85)}
+}
+
+/* START / GAME OVER */
+#menu{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.75);
+    z-index:100;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+}
+
+.panel{
+    width:90%;
+    max-width:350px;
+    padding:25px;
+    border-radius:20px;
+    background:linear-gradient(145deg,#111827,#1e293b);
+    border:2px solid #38bdf8;
+    box-shadow:0 0 35px #0284c7;
+}
+
+.panel h1{
+    margin:0 0 10px;
+    font-size:34px;
+    color:#38bdf8;
+    text-shadow:0 0 12px #00aaff;
+}
+
+button{
+    border:0;
+    border-radius:12px;
+    padding:13px 25px;
+    margin-top:15px;
+    font-size:18px;
+    font-weight:bold;
+    background:linear-gradient(45deg,#00c6ff,#0072ff);
+    color:white;
+    cursor:pointer;
+    box-shadow:0 0 15px #008cff;
+}
+
+button:active{
+    transform:scale(.95);
+}
+
+/* MOBILE CONTROLS */
+#controls{
+    position:absolute;
+    bottom:18px;
+    left:0;
+    right:0;
+    z-index:60;
+    display:flex;
+    justify-content:space-around;
+    pointer-events:none;
+}
+
+.ctrl{
+    pointer-events:auto;
+    width:75px;
+    height:55px;
+    background:rgba(0,0,0,.6);
+    border:2px solid white;
+    border-radius:15px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:30px;
+}
+
+/* BOOST EFFECT */
+.boost{
+    position:absolute;
+    width:6px;
+    height:45px;
+    background:#ffea00;
+    box-shadow:0 0 15px orange;
+    z-index:10;
+    opacity:.8;
+}
+
+/* FLASH */
+#flash{
+    position:absolute;
+    inset:0;
+    background:red;
+    opacity:0;
+    z-index:90;
+    pointer-events:none;
+}
+
+.small{
+    font-size:13px;
+    color:#cbd5e1;
+    line-height:1.5;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <div id="sky"></div>
+    <div id="road"></div>
+
+    <div id="hud">
+        <div class="box">🏆 Score: <span id="score">0</span></div>
+        <div class="box">🪙 Coins: <span id="coins">0</span></div>
+        <div class="box">❤️ <span id="lives">3</span></div>
+        <div class="box">⚡ <span id="speed">1</span></div>
+    </div>
+
+    <div id="player" class="car">
+        <div class="wheel w1"></div>
+        <div class="wheel w2"></div>
+        <div class="wheel w3"></div>
+        <div class="wheel w4"></div>
+    </div>
+
+    <div id="flash"></div>
+
+    <div id="controls">
+        <div class="ctrl" id="left">⬅️</div>
+        <div class="ctrl" id="boost">⚡</div>
+        <div class="ctrl" id="right">➡️</div>
+    </div>
+
+    <div id="menu">
+        <div class="panel">
+            <h1 id="title">🏎️ HIGHWAY RACER</h1>
+            <p id="message">Dodge cars, collect coins and survive!</p>
+            <p class="small">
+                ⬅️ ➡️ Arrow Keys = Move<br>
+                SPACE = Boost<br>
+                Collect 🪙 Coins<br>
+                Avoid 🚘 Enemy Cars
+            </p>
+            <button id="startBtn">START GAME</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const game = document.getElementById("game");
+const player = document.getElementById("player");
+const menu = document.getElementById("menu");
+
+const scoreEl = document.getElementById("score");
+const coinsEl = document.getElementById("coins");
+const livesEl = document.getElementById("lives");
+const speedEl = document.getElementById("speed");
+
+let playing = false;
+
+let playerX = 181;
+let playerY = 570;
+
+let score = 0;
+let coins = 0;
+let lives = 3;
+
+let speed = 5;
+let roadSpeed = 8;
+
+let enemies = [];
+let coinObjects = [];
+let lines = [];
+
+let leftPressed = false;
+let rightPressed = false;
+let boostPressed = false;
+
+let spawnTimer = 0;
+let coinTimer = 0;
+
+let highScore = Number(localStorage.getItem("highwayHighScore") || 0);
+
+/* SOUND */
+let audioCtx;
+
+function sound(freq,duration,type="sine"){
+    try{
+        if(!audioCtx) audioCtx = new AudioContext();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.frequency.value = freq;
+        osc.type = type;
+
+        gain.gain.setValueAtTime(.08,audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(
+            .001,
+            audioCtx.currentTime + duration
+        );
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }catch(e){}
+}
+
+/* ROAD LINES */
+for(let i=0;i<9;i++){
+    const line = document.createElement("div");
+    line.className="line";
+    line.style.top=(i*100-100)+"px";
+    road.appendChild(line);
+    lines.push(line);
+}
+
+/* PLAYER */
+function drawPlayer(){
+    player.style.left=playerX+"px";
+    player.style.top=playerY+"px";
+}
+
+/* START */
+document.getElementById("startBtn").onclick = startGame;
+
+function startGame(){
+
+    score=0;
+    coins=0;
+    lives=3;
+
+    speed=5;
+    roadSpeed=8;
+
+    playerX=181;
+
+    enemies.forEach(e=>e.el.remove());
+    coinObjects.forEach(c=>c.el.remove());
+
+    enemies=[];
+    coinObjects=[];
+
+    scoreEl.textContent=0;
+    coinsEl.textContent=0;
+    livesEl.textContent=3;
+    speedEl.textContent=1;
+
+    menu.style.display="none";
+    playing=true;
+
+    sound(600,.15);
+    requestAnimationFrame(gameLoop);
+}
+
+/* ENEMY COLORS */
+const colors=[
+    "linear-gradient(90deg,#111,#555,#111)",
+    "linear-gradient(90deg,#0066ff,#39a0ff,#0066ff)",
+    "linear-gradient(90deg,#009944,#22dd77,#009944)",
+    "linear-gradient(90deg,#ff7b00,#ffd000,#ff7b00)",
+    "linear-gradient(90deg,#7300ff,#c000ff,#7300ff)"
+];
+
+/* CREATE ENEMY */
+function createEnemy(){
+
+    const el=document.createElement("div");
+    el.className="enemy";
+
+    el.style.background=
+        colors[Math.floor(Math.random()*colors.length)];
+
+    const lanes=[85,145,205,265];
+
+    const x=lanes[Math.floor(Math.random()*lanes.length)];
+
+    el.style.left=x+"px";
+    el.style.top="-120px";
+
+    game.appendChild(el);
+
+    enemies.push({
+        el:el,
+        x:x,
+        y:-120,
+        speed:speed*(.8+Math.random()*.6)
+    });
+}
+
+/* CREATE COIN */
+function createCoin(){
+
+    const el=document.createElement("div");
+    el.className="coin";
+
+    const lanes=[98,158,218,278];
+    const x=lanes[Math.floor(Math.random()*lanes.length)];
+
+    el.style.left=x+"px";
+    el.style.top="-50px";
+
+    game.appendChild(el);
+
+    coinObjects.push({
+        el:el,
+        x:x,
+        y:-50
+    });
+}
+
+/* COLLISION */
+function hit(a,b){
+
+    return !(
+        a.right < b.left ||
+        a.left > b.right ||
+        a.bottom < b.top ||
+        a.top > b.bottom
+    );
+}
+
+/* GAME LOOP */
+function gameLoop(){
+
+    if(!playing) return;
+
+    /* MOVE PLAYER */
+    let moveSpeed=5;
+
+    if(boostPressed){
+        moveSpeed=9;
+    }
+
+    if(leftPressed){
+        playerX-=moveSpeed;
+    }
+
+    if(rightPressed){
+        playerX+=moveSpeed;
+    }
+
+    /* ROAD LIMIT */
+    if(playerX<67) playerX=67;
+    if(playerX>295) playerX=295;
+
+    drawPlayer();
+
+    /* ROAD ANIMATION */
+    lines.forEach(line=>{
+        let y=parseFloat(line.style.top);
+        y+=roadSpeed;
+
+        if(y>700) y=-100;
+
+        line.style.top=y+"px";
+    });
+
+    /* SPAWN ENEMIES */
+    spawnTimer++;
+
+    if(spawnTimer>70){
+        createEnemy();
+        spawnTimer=0;
+    }
+
+    /* SPAWN COINS */
+    coinTimer++;
+
+    if(coinTimer>90){
+        createCoin();
+        coinTimer=0;
+    }
+
+    /* PLAYER RECT */
+    const playerRect=player.getBoundingClientRect();
+
+    /* ENEMIES */
+    for(let i=enemies.length-1;i>=0;i--){
+
+        const e=enemies[i];
+
+        e.y += e.speed + (boostPressed ? 2 : 0);
+        e.el.style.top=e.y+"px";
+
+        const enemyRect=e.el.getBoundingClientRect();
+
+        if(hit(playerRect,enemyRect)){
+
+            e.el.remove();
+            enemies.splice(i,1);
+
+            lives--;
+
+            livesEl.textContent=lives;
+
+            sound(100,.3,"sawtooth");
+
+            document.getElementById("flash").style.opacity=".45";
+
+            setTimeout(()=>{
+                document.getElementById("flash").style.opacity="0";
+            },120);
+
+            if(lives<=0){
+                gameOver();
+                return;
+            }
+        }
+
+        if(e.y>730){
+            e.el.remove();
+            enemies.splice(i,1);
+        }
+    }
+
+    /* COINS */
+    for(let i=coinObjects.length-1;i>=0;i--){
+
+        const c=coinObjects[i];
+
+        c.y+=roadSpeed;
+        c.el.style.top=c.y+"px";
+
+        const coinRect=c.el.getBoundingClientRect();
+
+        if(hit(playerRect,coinRect)){
+
+            coins++;
+            score+=50;
+
+            coinsEl.textContent=coins;
+            scoreEl.textContent=score;
+
+            sound(900,.08);
+
+            c.el.remove();
+            coinObjects.splice(i,1);
+            continue;
+        }
+
+        if(c.y>730){
+            c.el.remove();
+            coinObjects.splice(i,1);
+        }
+    }
+
+    /* SCORE */
+    score++;
+
+    scoreEl.textContent=score;
+
+    /* SPEED INCREASE */
+    if(score%500===0){
+        speed+=.5;
+        roadSpeed+=.7;
+
+        speedEl.textContent=Math.floor(speed);
+
+        sound(700,.12);
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+/* GAME OVER */
+function gameOver(){
+
+    playing=false;
+
+    if(score>highScore){
+        highScore=score;
+        localStorage.setItem("highwayHighScore",highScore);
+    }
+
+    document.getElementById("title").textContent="💥 GAME OVER";
+
+    document.getElementById("message").innerHTML=
+        "Score: <b>"+score+"</b><br>"+
+        "Coins: <b>"+coins+"</b><br>"+
+        "🏆 High Score: <b>"+highScore+"</b>";
+
+    document.getElementById("startBtn").textContent="🔄 RESTART";
+
+    menu.style.display="flex";
+
+    sound(80,.5,"square");
+}
+
+/* KEYBOARD */
+document.addEventListener("keydown",e=>{
+
+    if(e.key==="ArrowLeft"){
+        leftPressed=true;
+        e.preventDefault();
+    }
+
+    if(e.key==="ArrowRight"){
+        rightPressed=true;
+        e.preventDefault();
+    }
+
+    if(e.code==="Space"){
+        boostPressed=true;
+        e.preventDefault();
+    }
+});
+
+document.addEventListener("keyup",e=>{
+
+    if(e.key==="ArrowLeft"){
+        leftPressed=false;
+    }
+
+    if(e.key==="ArrowRight"){
+        rightPressed=false;
+    }
+
+    if(e.code==="Space"){
+        boostPressed=false;
+    }
+});
+
+/* MOBILE BUTTONS */
+function holdButton(element,down,up){
+
+    element.addEventListener("mousedown",down);
+    element.addEventListener("mouseup",up);
+    element.addEventListener("mouseleave",up);
+
+    element.addEventListener("touchstart",e=>{
+        e.preventDefault();
+        down();
+    });
+
+    element.addEventListener("touchend",e=>{
+        e.preventDefault();
+        up();
+    });
+}
+
+holdButton(
+    document.getElementById("left"),
+    ()=>leftPressed=true,
+    ()=>leftPressed=false
+);
+
+holdButton(
+    document.getElementById("right"),
+    ()=>rightPressed=true,
+    ()=>rightPressed=false
+);
+
+holdButton(
+    document.getElementById("boost"),
+    ()=>boostPressed=true,
+    ()=>boostPressed=false
+);
+
+drawPlayer();
+</script>
+
+</body>
+</html>
+```
